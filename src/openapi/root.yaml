@@ -16,7 +16,7 @@ tags:
       регистрацию приемщиком входящей партии. 
 
 paths:
-  /acceptance:
+  /acceptance/registerLot:
     post:
       tags:
         - Приемка
@@ -43,6 +43,25 @@ paths:
           description: Invalid input
         '422':
           description: Validation exception
+  /acceptance/registerPackage:
+    post:
+      tags:
+        - Приемка
+      summary: Регистрация пакета
+      description: |-
+        Пользователь регистрирует пакеты внутри лота.
+        Результат: в системе появился экземпляр сущности "Пакет", ассоциированный с входящим лотом; обладающий уникальным номером, весом, признаком системы оценки
+      operationId: registerPackage
+      requestBody:
+        description: Команда регистрации пакета
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registerPackageCommand'
+        required: true
+      responses:
+        '201':
+          description: Operation accepted
 
 
 components:
@@ -66,6 +85,21 @@ components:
           format: int32
           description: Номер заявки или доп. соглашения
 
+    registerPackageCommand:  
+      type: object
+      description: |- 
+        Команда регистрации пакета
+      properties:
+        method:
+          type: string
+          enum: 
+            - acceptance:register-package
+        certificationType:
+          type: object
+          description: Система сертификации
+        packageType:
+          type: object
+          description: Тип пакета
 
     registerLotResponse:  
       type: object
