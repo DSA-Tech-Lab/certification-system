@@ -9,8 +9,54 @@ info:
     - Проверка подлинности сертификатов
   version: 0.0.1
 
+tags:
+  - name: Приемка
+    description: |-
+      Процесс, включающий в себя: взвешивание камней, печать и подписание Клиентом пакета входных документов, 
+      регистрацию приемщиком входящей партии. 
+
+paths:
+  /pet:
+    post:
+      tags:
+        - Приемка
+      summary: Регистрация партии
+      description: |-
+        Пользователь регистрирует партию (новый входящий лот). 
+        Результат: в системе появился экземпляр сущности "Входящий лот", ассоциированный с клиентом, заявкой или доп.соглашением; обладающий уникальным номером, количеством камней, весом камней.
+      operationId: createBatch
+      requestBody:
+        description: Команда регистрации партии
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createBatchCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createBatchResponse'
+        '400':
+          description: Invalid input
+        '422':
+          description: Validation exception
+
+
 components:
   schemas:
+
+    createBatchCommand:  
+      type: object
+      description: |- 
+        todo
+    createBatchResponse:  
+      type: object
+      description: |- 
+        todo
+        
     Batch:
       type: object
       description: |- 
