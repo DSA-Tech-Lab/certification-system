@@ -68,6 +68,8 @@ components:
           description: Тип пакета
         certificate:
           $ref: '#/components/schemas/Certificate'
+        worksheet:
+          $ref: '#/components/schemas/Worksheet'
     Certificate:
       type: object
       description: |- 
@@ -107,6 +109,31 @@ components:
           type: string
           format: date-time
           description: Дата закрытия
+        diagnostics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Diagnosis'
+        isShootingRequared:
+          type: boolean
+          description: Требуется съемка
+        isExaminationHeliumRequared:
+          type: boolean
+          description: Требуется измерение Хелиум
+        isEngravingRequared:
+          type: boolean
+          description: Требуется графировка
+        listOfShooting:
+          type: array
+          items:
+            $ref: '#/components/schemas/Shooting'
+        listOfExaminationResultHelium:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExaminationResultHelium'
+        listOfEngraving:
+          type: array
+          items:
+            $ref: '#/components/schemas/Engraving'
     PackageWithStones:
       type: object
       description: |- 
@@ -115,7 +142,7 @@ components:
       type: object
       description: |- 
         Пакет с ювелирным изделием
-    Diagnostics:
+    Diagnosis:
       type: object
       description: |- 
         Диагностика — совокупность процессов по оценке характеристик драгоценного камня при сертификации.
@@ -154,16 +181,85 @@ components:
       type: object
       description: |- 
         Съемка
+      properties:
+        number:
+          type: integer
+          format: int64
+          description: Номер снимка
+        date:
+          type: string
+          format: date-time
+          description: Дата снимка
+        userId:
+          type: object
+          description: Идентификатор сотрудника
+        url:
+          type: string
+          description: ссылка на виджет
     ExaminationResultHelium:
       type: object
       description: |- 
         Измерения Хелиум
         Helium Polish	— установка для диагностики. Позволяет получить геометрические характеристики камня.
+      properties:
+        number:
+          type: integer
+          format: int64
+          description: Номер измерения
+        date:
+          type: string
+          format: date-time
+          description: Дата измерения
+        userId:
+          type: object
+          description: Идентификатор сотрудника
+        source:
+          type: object
+          description: Исходный файл измерений
+        property01:
+          type: object
+          description: Минимальный диаметр
+        property02:
+          type: object
+          description: Максимальный диаметр
+        property03:
+          type: object
+          description: Площадка, %
+        property04:
+          type: object
+          description: Высота короны, %
+        property05:
+          type: object
+          description: Глубина павильона, %
+        property06:
+          type: object
+          description: Высота рундиста, %
+        property07:
+          type: object
+          description: Угол короны
+        property08:
+          property06: object
+          description: Угол павильона
     ExaminationResultGemological:
       type: object
       description: |- 
         Результаты геммологической экспертизы
         Геммолог — специалист по оценке драгоценных камней.
+      properties:
+        number:
+          type: integer
+          format: int64
+          description: Номер экспертизы
+        date:
+          type: string
+          format: date-time
+          description: Дата экспертизы
+        userId:
+          type: object
+          description: Идентификатор экспертизы
+        comment:
+          type: string
+          description: Комментарий
     ExaminationResultAuroraDiamonds:
       type: object
       description: |- 
@@ -192,6 +288,18 @@ components:
       description: |- 
         Гравировка — процесс нанесения на драгоценный камень (для бриллиантов наносится на рундист) с помощью специальной лазерной установки последовательности символов. 
         Обычно наносится номер сертификата, но может быть произвольная фраза по желанию Клиента.
+      properties:
+        number:
+          type: integer
+          format: int64
+          description: Номер гравировки
+        date:
+          type: string
+          format: date-time
+          description: Дата гравировки
+        userId:
+          type: object
+          description: Идентификатор сотрудника
     Plotting:
       type: object
       description: |- 
