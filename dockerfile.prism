@@ -1,5 +1,0 @@
-FROM stoplight/prism:5
-ADD src/openapi/root.yaml /usr/src/prism/
-EXPOSE 4010
-
-CMD ["mock", "-d", "-h","'0.0.0.0'","/usr/src/prism/root.yaml"]
