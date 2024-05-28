@@ -256,7 +256,7 @@ components:
           type: integer
           description: количество камней в пакете, вводит приемщик при регистрации пакета
           example: 10
-        caratWeight:
+        stoneWeight:
           type: number
           description: вес камней в пакете в каратах, вводит приемщик при регистрации пакета
           format: float
@@ -271,10 +271,11 @@ components:
           type: integer
           description: количество изделий в пакете, вводит приемщик при регистрации пакета
           example: 2
-        gramWeight:
+        jewelryWeight:
           type: number
           format: float
           example: 10.50
+          description: вес ювелирного изделия в граммах, вводит приемщик при регистрации пакета
         jewelryKind:
           type: string
           description: вид изделия, вводит приемщик при регистрации пакета (перечень будет дополняться)
