@@ -370,7 +370,8 @@ components:
           format: date-time
           description: Дата снимка, дата сохранения снимка
         userId:
-          type: object
+          type: integer
+          format: int32
           description: Идентификатор сотрудника
         url:
           type: string
@@ -390,7 +391,8 @@ components:
           format: date-time
           description: Дата измерения
         userId:
-          type: object
+          type: integer
+          format: int32
           description: Идентификатор сотрудника
         source:
           type: object
@@ -473,7 +475,8 @@ components:
           format: date-time
           description: Дата экспертизы
         userId:
-          type: object
+          type: integer
+          format: int32
           description: Идентификатор сотрудника, выполнившего экспертизу
         comment:
           type: string
@@ -493,7 +496,8 @@ components:
           format: date-time
           description: Дата измерения
         userId:
-          type: object
+          type: integer
+          format: int32
           description: Идентификатор сотрудника
         comment:
           type: string
@@ -520,7 +524,8 @@ components:
           description: Текст, который нужно выгравировать 
           example: "SGC-01234567890"
         userId:
-          type: object
+          type: integer
+          format: int32
           description: Идентификатор сотрудника, сделавшего гравировку
     Plotting:
       type: object
