@@ -43,6 +43,7 @@ paths:
           description: Invalid input
         '422':
           description: Validation exception
+
   /acceptance/registerPackage:
     post:
       tags:
@@ -63,6 +64,30 @@ paths:
         '201':
           description: Operation accepted
 
+  /worksheet/{worksheetId}:
+    get:
+      tags:
+        - Приемка
+      summary: Просмотр рабочего листа
+      description: |-
+        Пользователь просматривает рабочий лист. 
+        Результат: пользователь видит параметры рабочего листа.
+      operationId: getWorksheetById
+      parameters:
+        - name: worksheetId
+          in: path
+          description: Идентификатор рабочего листа
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/worksheetResponse'
 
 components:
   schemas:
@@ -100,10 +125,14 @@ components:
           type: object
           description: Тип пакета
 
-    registerLotResponse:  
+    registerLotResponse:
       type: object
       description: |- 
         todo
+
+    worksheetResponse:
+      type: object
+      $ref: '#/components/schemas/Worksheet'
         
     Lot:
       type: object
