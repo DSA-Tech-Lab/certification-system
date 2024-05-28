@@ -66,7 +66,6 @@ paths:
 
 components:
   schemas:
-
     registerLotCommand:  
       type: object
       description: |- 
@@ -106,42 +105,42 @@ components:
       description: |- 
         todo
         
-    Batch:
+    Lot:
       type: object
       description: |- 
         Входящий лот — совокупность камней или ювелирных изделий, пришедших от клиента для проведения сертификации. 
         Входящий лот отражается в Дополнительном соглашении или Заявке. 
-        Одна входящий лот – одна заявка или доп.соглашение.
+        Один входящий лот – одна заявка или доп.соглашение.
       properties:
-        batchNumber:
+        lotNumber:
           type: integer
           format: int64
-          description: Номер лота
-          examples: [10]
+          description: Номер лота, уникален, формируется системой при регистрации лота
+          example: 
+            - 123456
         date:
           type: string
           format: date-time
-          description: Дата прихода
+          description: Дата прихода, вводится приемщиком вручную при регистрации лота
+          example: "2024-05-28T12:20:50.52Z"
         clientId:
           type: integer
           format: int32
-          description: Идентификатор клиента
-          examples: [198772]
+          description: Идентификатор клиента, клиент выбирается приемщиком при регистрации лота.
+          example: 
+            - 198772
+        state:
+          type: string
+          description: Статус лота. Новый - после регистрации лота. В работе - после того как хотя бы 1 пакет лота будет направлен в работу. Закрыт - после того как лот закроют. 
+          enum:
+            - "Новый"
+            - "В работе"
+            - "Закрыт"
         requestId:
-          type: integer
-          format: int32
-          description: Номер заявки или доп. соглашения
-          examples: [34562]
-        quantityOfStones:
-          type: integer
-          format: int32
-          description: Количество камней в партии
-          examples: [7]
-        totalWeight:
-          type: number
-          format: decimal
-          description: Общий вес в партии
-          examples: [99.13]
+          type: string
+          description: Номер заявки или доп. соглашения, вводится приемщиком вручную (пока что) при регистрации лота
+          example: 
+            - "562/2024"
     Package:
       type: object
       description: |-
@@ -153,14 +152,29 @@ components:
         packageNumber:
           type: integer
           format: int64
-          description: Номер пакета
-          examples: [10533]
+          description: Номер пакета, уникальный, формируется системой. В будущем номер должен будет переноситься на QR или штрих-код для нанесения на физический пакет.
+          example:
+            - 123456
         certificationType:
-          type: object
-          description: Система сертификации
+          type: string
+          description: Система сертификации, выбирает приемщик при регистрации пакета.
+          enum:
+            - Сертификация по РФ системе
+            - Сертификация по РФ системе + по международной системе
         packageType:
-          type: object
-          description: Тип пакета
+          type: string
+          description: Тип пакета, выбирает приемщик при регистрации пакета.
+          enum:
+            - одиночный драгоценный камень
+            - партия драгоценных камней
+            - ювелирное изделие
+        state:
+          type: string
+          description: Статус пакета
+          enum:
+             - Новый
+             - В работе
+             - Закрыт
         certificate:
           $ref: '#/components/schemas/Certificate'
         worksheet:
@@ -168,55 +182,59 @@ components:
     Certificate:
       type: object
       description: |- 
-        Сертификационный документ	— документ, подтверждающий характеристики драгоценного камня, прошедшего сертификацию.
-        Бывает двух видов: Сертификат и Экспертное заключение. 
-        Экспертное заключение имеет более низкий статус, чем Сертификат.
+        Сертификационный документ	— документ, подтверждающий характеристики драгоценного камня или ювелирного изделия, прошедшего сертификацию.
+        Бывает трех видов: Сертификат соответствия, Экспертное заключение, Аттестат. 
       properties:
         type:
-          type: object
-          description: Тип документа
+          type: string
+          description: Тип документа, при печати документа приемщик (или другой пользователь, кот-ый печатает) должен выбрать соответствующий шаблон. В будущем система должна будет подбирать нужный вид. 1. Сертификат соответствия выдается только на бриллианты натурального происхождения или ограненные алмазы лабораторного происхождения. А также на партии указанных камней. Может содержать изображение плоттинга (опционально).2.Экспертное заключение выдается на драгоценные камни, отличные от п.1. Содержит фото образца. 3. Аттестат выдается только на ювелирное изделие. Содержит фото образца.
+          enum:
+            - Сертификат соответствия
+            - Экспертное заключение
+            - Аттестат ювелирного изделия
         number:
           type: integer
           format: int64
-          description: Номер документа
+          description: Номер документа. Вводится приемщиком при распечатке. Нужно проверять на уникальность. В будущем планируется сделать регистрацию сертификата в системе через сканирование кода.
+          example: 20000000123456
         date:
           type: string
-          format: date-time
-          description: Дата выдачи документа
+          format: date
+          description: Дата выдачи документа. Вводит работник приемщик (или другой пользователь, кот-ый печатает) при печати
+          example: "2024-05-28"
     Worksheet:
       type: object
       description: |- 
         Рабочий лист — форма, в которую вводятся результаты диагностики (натуральность, форма, цвет, чистота и др.характеристики камня). 
-        Лист создается для каждого пакета в партии.
+        Лист создается для каждого пакета в лоте.
       properties:
         number:
           type: integer
           format: int64
-          description: Номер рабочего листа
-        type:
-          type: object
-          description: Статус рабочего листа
+          description: Номер рабочего листа, формируется системой при передаче пакета в работу
         startDate:
           type: string
           format: date-time
           description: Дата передачи в работу
+          example: "2024-05-28T12:20:50.52Z"
         endDate:
           type: string
           format: date-time
-          description: Дата закрытия
+          description: Дата закрытия, дата завершения работы над пакетом
+          example: "2024-05-28T12:20:50.52Z"
         diagnostics:
           type: array
           items:
             $ref: '#/components/schemas/Diagnosis'
-        isShootingRequared:
+        isShootingRequired:
           type: boolean
-          description: Требуется съемка
-        isExaminationHeliumRequared:
+          description: Требуется съемка, отмечает приемщик
+        isExaminationHeliumRequired:
           type: boolean
-          description: Требуется измерение Хелиум
-        isEngravingRequared:
+          description: Требуется измерение Хелиум, отмечает диагност
+        isEngravingRequired:
           type: boolean
-          description: Требуется графировка
+          description: Требуется гравировка, отмечает приемщик
         listOfShooting:
           type: array
           items:
@@ -233,10 +251,38 @@ components:
       type: object
       description: |- 
         Пакет с камнями
+      properties:
+        quantityOfStones:
+          type: integer
+          description: количество камней в пакете, вводит приемщик при регистрации пакета
+          example: 10
+        stoneWeight:
+          type: number
+          description: вес камней в пакете в каратах, вводит приемщик при регистрации пакета
+          format: float
+          minimum: 0.00
+          example: 1.50
     PackageWithJewelry:
       type: object
       description: |- 
         Пакет с ювелирным изделием
+      properties:
+        quantityOfJewelry:
+          type: integer
+          description: количество изделий в пакете, вводит приемщик при регистрации пакета
+          example: 2
+        jewelryWeight:
+          type: number
+          format: float
+          example: 10.50
+          description: вес ювелирного изделия в граммах, вводит приемщик при регистрации пакета
+        jewelryKind:
+          type: string
+          description: вид изделия, вводит приемщик при регистрации пакета (перечень будет дополняться)
+          enum:
+            - браслет
+            - серьги
+            - колье
     Diagnosis:
       type: object
       description: |- 
@@ -259,19 +305,28 @@ components:
         Диагностика камня
       properties:
         type:
-          type: object
-          description: Вид минерала
+          type: string
+          description: Вид минерала, вводится диагностом (перечень будет дополняться)
+          enum:
+            - бриллиант
+            - сапфир
+            - рубин
     JewelryDiagnostics:
       type: object
       description: |- 
         Диагностика ювелирного изделия
       properties:
         type:
-          type: object
-          description: Вид металла
-        purity:
-          type: object
-          description: Проба металла
+          type: string
+          description: Вид металла, вводится диагностом (перечень будет дополняться)
+        metalSample:
+          type: string
+          description: Проба металла, вводится диагностом (перечень будет дополняться)
+          enum:
+            - "925"
+            - "585"
+            - "875"
+          
     Shooting:
       type: object
       description: |- 
@@ -280,17 +335,17 @@ components:
         number:
           type: integer
           format: int64
-          description: Номер снимка
+          description: Номер снимка, уникальный, формируется системой
         date:
           type: string
           format: date-time
-          description: Дата снимка
+          description: Дата снимка, дата сохранения снимка
         userId:
           type: object
           description: Идентификатор сотрудника
         url:
           type: string
-          description: ссылка на виджет
+          description: ссылка на виджет (?)
     ExaminationResultHelium:
       type: object
       description: |- 
@@ -311,30 +366,69 @@ components:
         source:
           type: object
           description: Исходный файл измерений
-        property01:
-          type: object
-          description: Минимальный диаметр
-        property02:
-          type: object
-          description: Максимальный диаметр
-        property03:
-          type: object
-          description: Площадка, %
-        property04:
-          type: object
+        minimumDiameter:
+          type: number
+          format: float
+          description: Минимальный диаметр, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        maximumDiameter:
+          type: number
+          format: float
+          description: Максимальный диаметр, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        height:
+          type: number
+          format: float
+          description: Общая высота, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        tablePercentage:
+          type: number
+          format: float
+          description: Размер площадки, %
+          example: 53.80
+          minimum: 0.00
+          maximum: 100.00
+        crownHeightPercentage:
+          type: number
+          format: float
           description: Высота короны, %
-        property05:
-          type: object
+          example: 45.80
+          minimum: 0.00
+          maximum: 100.00
+        pavilionDepthPercentage:
+          type: number
+          format: float
           description: Глубина павильона, %
-        property06:
-          type: object
+          example: 45.80
+          minimum: 0.00
+          maximum: 100.00
+        girdleThicknessPercentage:
+          type: number
+          format: float
           description: Высота рундиста, %
-        property07:
-          type: object
-          description: Угол короны
-        property08:
-          property06: object
-          description: Угол павильона
+          example: 45.80
+          minimum: 0.00
+          maximum: 100.00
+        crownAngle:
+          type: number
+          format: float
+          description: Угол короны, град
+          example: 32.50
+          minimum: 0.00
+          maximum: 90.00
+        pavilionAngle:
+          type: number
+          format: float
+          description: Угол павильона, град
+          example: 40.75
+          minimum: 0.00
+          maximum: 90.00
     ExaminationResultGemological:
       type: object
       description: |- 
@@ -351,10 +445,10 @@ components:
           description: Дата экспертизы
         userId:
           type: object
-          description: Идентификатор экспертизы
+          description: Идентификатор сотрудника, выполнившего экспертизу
         comment:
           type: string
-          description: Комментарий
+          description: Произвольный комментарий геммолога
     ExaminationResultAuroraDiamonds:
       type: object
       description: |- 
@@ -374,7 +468,7 @@ components:
           description: Идентификатор сотрудника
         comment:
           type: string
-          description: Комментарий
+          description: Произвольный комментарий сотрудника
         image:
           type: object
           description: Фото, результат измерения
@@ -392,9 +486,13 @@ components:
           type: string
           format: date-time
           description: Дата гравировки
+        engravingText:
+          type: string
+          description: Текст, который нужно выгравировать 
+          example: "SGC-01234567890"
         userId:
           type: object
-          description: Идентификатор сотрудника
+          description: Идентификатор сотрудника, сделавшего гравировку
     Plotting:
       type: object
       description: |- 
