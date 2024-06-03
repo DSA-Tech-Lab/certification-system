@@ -131,7 +131,6 @@ components:
         todo
 
     worksheetResponse:
-      type: object
       $ref: '#/components/schemas/Worksheet'
         
     Lot:
@@ -261,9 +260,9 @@ components:
           description: Дата закрытия, дата завершения работы над пакетом
           example: "2024-05-28T12:20:50.52Z"
         diagnostics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Diagnosis'
+          oneOf:
+            - $ref: '#/components/schemas/StoneDiagnostics'
+            - $ref: '#/components/schemas/JewelryDiagnostics'
         isExaminationHeliumRequired:
           type: boolean
           description: Требуется измерение Хелиум, отмечает диагност
@@ -336,41 +335,41 @@ components:
         comment:
           type: string
           description: Комментарий
-        stoneDiagnostics:
-          $ref: '#/components/schemas/StoneDiagnostics'
-        jewelryDiagnostics:
-          $ref: '#/components/schemas/JewelryDiagnostics'
         examinationResultAuroraDiamonds:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExaminationResultAuroraDiamonds'
+          $ref: '#/components/schemas/ExaminationResultAuroraDiamonds'
     StoneDiagnostics:
       type: object
       description: |- 
         Диагностика камня или партии камней
-      properties:
-        mineralType:
-          type: string
-          description: Вид минерала, вводится диагностом (перечень будет дополняться)
-          enum:
-            - бриллиант
-            - сапфир
-            - рубин
+      allOf:
+        - $ref: '#/components/schemas/Diagnosis'
+        - type: object
+          properties:
+            mineralType:
+              type: string
+              description: Вид минерала, вводится диагностом (перечень будет дополняться)
+              enum:
+                - бриллиант
+                - сапфир
+                - рубин
     JewelryDiagnostics:
       type: object
       description: |- 
         Диагностика ювелирного изделия
-      properties:
-        type:
-          type: string
-          description: Вид металла, вводится диагностом (перечень будет дополняться)
-        metalSample:
-          type: string
-          description: Проба металла, вводится диагностом (перечень будет дополняться)
-          enum:
-            - "925"
-            - "585"
-            - "875"
+      allOf:
+        - $ref: '#/components/schemas/Diagnosis'
+        - type: object
+          properties:
+            type:
+              type: string
+              description: Вид металла, вводится диагностом (перечень будет дополняться)
+            metalSample:
+              type: string
+              description: Проба металла, вводится диагностом (перечень будет дополняться)
+              enum:
+                - "925"
+                - "585"
+                - "875"
           
     Shooting:
       type: object
