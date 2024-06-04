@@ -131,7 +131,6 @@ components:
         todo
 
     worksheetResponse:
-      type: object
       $ref: '#/components/schemas/Worksheet'
         
     Lot:
@@ -184,12 +183,21 @@ components:
           description: Номер пакета, уникальный, формируется системой. В будущем номер должен будет переноситься на QR или штрих-код для нанесения на физический пакет.
           example:
             - 123456
-        certificationType:
+        packageCertificationSystem:
           type: string
-          description: Система сертификации, выбирает приемщик при регистрации пакета.
+          description: Тип сертификации для пакета, выбирается приемщиком при регистрации пакета. Должна быть возможность изменять в процессе, пока пакет не перешел в статус "Закрыт". Тип сертификации не должен влиять на доступные разделы в рабочем листе. Тип сертификации должен влиять на состав данных при печати сертификата.
           enum:
-            - Сертификация по РФ системе
-            - Сертификация по РФ системе + по международной системе
+              - "Сертификация по РФ системе"
+              - "Сертификация по международной системе"
+        packageWorkScope:
+          type: array
+          description: Перечень работ, которые необходимо будет произвести с пакетом. Выбирается приемщиком при регистрации пакета. В зависимости от выбранного перечня доступны к редактированию различные части рабочего листа. На данном этапе реализации можно изменить перечень, пока пакет не переходит в статус "Закрыт".
+          items:
+            type: string
+            enum:
+              - "Плоттинг"
+              - "Гравировка"
+              - "Съемка"
         packageType:
           type: string
           description: Тип пакета, выбирает приемщик при регистрации пакета.
@@ -211,7 +219,7 @@ components:
     Certificate:
       type: object
       description: |- 
-        Сертификационный документ	— документ, подтверждающий характеристики драгоценного камня или ювелирного изделия, прошедшего сертификацию.
+        Сертификационный документ  — документ, подтверждающий характеристики драгоценного камня или ювелирного изделия, прошедшего сертификацию.
         Бывает трех видов: Сертификат соответствия, Экспертное заключение, Аттестат. 
       properties:
         type:
@@ -252,18 +260,12 @@ components:
           description: Дата закрытия, дата завершения работы над пакетом
           example: "2024-05-28T12:20:50.52Z"
         diagnostics:
-          type: array
-          items:
-            $ref: '#/components/schemas/Diagnosis'
-        isShootingRequired:
-          type: boolean
-          description: Требуется съемка, отмечает приемщик
+          oneOf:
+            - $ref: '#/components/schemas/StoneDiagnostics'
+            - $ref: '#/components/schemas/JewelryDiagnostics'
         isExaminationHeliumRequired:
           type: boolean
           description: Требуется измерение Хелиум, отмечает диагност
-        isEngravingRequired:
-          type: boolean
-          description: Требуется гравировка, отмечает приемщик
         listOfShooting:
           type: array
           items:
@@ -276,18 +278,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Engraving'
-    PackageWithStones:
+    PackageWithOneStone:
       type: object
       description: |- 
-        Пакет с камнями
+        Пакет с одним драгоценным камнем
+      properties:
+        stoneWeight:
+          type: number
+          description: вес камня в пакете в каратах, вводит приемщик при регистрации пакета
+          format: float
+          minimum: 0.00
+          example: 1.50
+    PackageWithMultipleStones:
+      type: object
+      description: |- 
+        Пакет с партией драгоценных камней, при заполнении рабочего листа для партии должен быть опционально доступен ввод свойств камня в виде диапазона
       properties:
         quantityOfStones:
           type: integer
           description: количество камней в пакете, вводит приемщик при регистрации пакета
           example: 10
-        stoneWeight:
+        stonesWeight:
           type: number
-          description: вес камней в пакете в каратах, вводит приемщик при регистрации пакета
+          description: суммарный вес камней в пакете в каратах, вводит приемщик при регистрации пакета
           format: float
           minimum: 0.00
           example: 1.50
@@ -312,6 +325,8 @@ components:
             - браслет
             - серьги
             - колье
+        jewelryInserts:
+          $ref: '#/components/schemas/JewelryInserts'
     Diagnosis:
       type: object
       description: |- 
@@ -320,41 +335,41 @@ components:
         comment:
           type: string
           description: Комментарий
-        diamondDiagnostics:
-          $ref: '#/components/schemas/DiamondDiagnostics'
-        jewelryDiagnostics:
-          $ref: '#/components/schemas/JewelryDiagnostics'
         examinationResultAuroraDiamonds:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExaminationResultAuroraDiamonds'
-    DiamondDiagnostics:
+          $ref: '#/components/schemas/ExaminationResultAuroraDiamonds'
+    StoneDiagnostics:
       type: object
       description: |- 
-        Диагностика камня
-      properties:
-        type:
-          type: string
-          description: Вид минерала, вводится диагностом (перечень будет дополняться)
-          enum:
-            - бриллиант
-            - сапфир
-            - рубин
+        Диагностика камня или партии камней
+      allOf:
+        - $ref: '#/components/schemas/Diagnosis'
+        - type: object
+          properties:
+            mineralType:
+              type: string
+              description: Вид минерала, вводится диагностом (перечень будет дополняться)
+              enum:
+                - бриллиант
+                - сапфир
+                - рубин
     JewelryDiagnostics:
       type: object
       description: |- 
         Диагностика ювелирного изделия
-      properties:
-        type:
-          type: string
-          description: Вид металла, вводится диагностом (перечень будет дополняться)
-        metalSample:
-          type: string
-          description: Проба металла, вводится диагностом (перечень будет дополняться)
-          enum:
-            - "925"
-            - "585"
-            - "875"
+      allOf:
+        - $ref: '#/components/schemas/Diagnosis'
+        - type: object
+          properties:
+            type:
+              type: string
+              description: Вид металла, вводится диагностом (перечень будет дополняться)
+            metalSample:
+              type: string
+              description: Проба металла, вводится диагностом (перечень будет дополняться)
+              enum:
+                - "925"
+                - "585"
+                - "875"
           
     Shooting:
       type: object
@@ -380,7 +395,7 @@ components:
       type: object
       description: |- 
         Измерения Хелиум
-        Helium Polish	— установка для диагностики. Позволяет получить геометрические характеристики камня.
+        Helium Polish  — установка для диагностики. Позволяет получить геометрические характеристики камня.
       properties:
         number:
           type: integer
@@ -478,14 +493,149 @@ components:
           type: integer
           format: int32
           description: Идентификатор сотрудника, выполнившего экспертизу
+        ExaminationResultGemologicalForDifferentPackages:
+          type: object
+          description: параметрия камня, измеренная вручную. для одиночных камней и партий состав параметров отличается
+          properties:
+            ResultForSingleStone:
+              $ref: '#/components/schemas/HemologicalForSingleStone'
+            ResultForMultipleStones:
+              $ref: '#/components/schemas/DiamondParametersForMultipleStones'
         comment:
           type: string
-          description: Произвольный комментарий геммолога
+          description: Произвольный комментарий геммолога, вводится при проведении экспертизы
+          example: Натуральный бриллиант без следов лабораторного улучшения, присутствуют включения
+    HemologicalForSingleStone:
+      type: object
+      description: результаты геммологической экспертизы для одиночного камня
+      properties:
+        diamondParameters:
+          $ref: '#/components/schemas/DiamondParametersForSingleStone'
+        diamondProperties:
+          $ref: '#/components/schemas/DiamondPropertiesForSingleStone'
+        defectsList:
+          $ref: '#/components/schemas/DefectsList'
+    HemologicalForMultipleStones:
+      type: object
+      description: результаты геммологической экспертизы для партии
+      properties:
+        diamondParameters: 
+          $ref: '#/components/schemas/DiamondParametersForMultipleStones'
+        diamondProperties:
+          $ref: '#/components/schemas/DiamondPropertiesForMultipleStones'
+    HemologicalForJewelry:
+      type: object
+      description: результаты геммологической экспертизы для ювлеирного изделия
+      properties:
+        diamondProperties:
+          type: array
+          description: свойства вставок-бриллиантов ювелирного изделия
+          items:
+            $ref: '#/components/schemas/DiamondPropertiesForJewelry'
+    DiamondParametersForSingleStone:
+      type: object
+      description: параметрия одиночного бриллианта, измеренная вручную геммологом в рамках экспертизы. Если у бриллианта есть параметрия Хелиум, то ручной ввод запрещен.
+      properties:
+        minimumDiameter:
+          type: number
+          format: float
+          description: Минимальный диаметр, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        maximumDiameter:
+          type: number
+          format: float
+          description: Максимальный диаметр, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        height:
+          type: number
+          format: float
+          description: Общая высота, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        tablePercentage:
+          type: number
+          format: float
+          description: Размер площадки, %
+          example: 53.80
+          minimum: 0.00
+          maximum: 100.00
+        crownHeightPercentage:
+          type: number
+          format: float
+          description: Высота короны, %
+          example: 45.80
+          minimum: 0.00
+          maximum: 100.00
+        pavilionDepthPercentage:
+          type: number
+          format: float
+          description: Глубина павильона, %
+          example: 45.80
+          minimum: 0.00
+          maximum: 100.00
+        girdleThicknessPercentage:
+          type: number
+          format: float
+          description: Высота рундиста, %
+          example: 45.80
+          minimum: 0.00
+          maximum: 100.00
+        crownAngle:
+          type: number
+          format: float
+          description: Угол короны, град
+          example: 32.50
+          minimum: 0.00
+          maximum: 90.00
+        pavilionAngle:
+          type: number
+          format: float
+          description: Угол павильона, град
+          example: 40.75
+          minimum: 0.00
+          maximum: 90.00
+    DiamondParametersForMultipleStones:
+      type: object
+      description: параметрия партии бриллиантов, измеренная вручную геммологом в рамках экспертизы
+      properties:
+        minimumDiameter:
+          type: number
+          format: float
+          description: Минимальный диаметр, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        maximumDiameter:
+          type: number
+          format: float
+          description: Максимальный диаметр, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        minimumHeight:
+          type: number
+          format: float
+          description: Общая высота, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
+        maximumHeight:
+          type: number
+          format: float
+          description: Общая высота, мм
+          example: 1.50
+          minimum: 0.00
+          maximum: 100.00
     ExaminationResultAuroraDiamonds:
       type: object
       description: |- 
         Измерения AuroraDiamonds
-        Aurora Diamonds	— установка для диагностики. Позволяет просвечивать бриллианты под разными видами излучения и получать соответствующие изображения.
+        Aurora Diamonds  — установка для диагностики. Позволяет просвечивать бриллианты под разными видами излучения и получать соответствующие изображения.
       properties:
         number:
           type: integer
@@ -511,17 +661,17 @@ components:
         Гравировка — процесс нанесения на драгоценный камень (для бриллиантов наносится на рундист) с помощью специальной лазерной установки последовательности символов. 
         Обычно наносится номер сертификата, но может быть произвольная фраза по желанию Клиента.
       properties:
-        number:
+        engravingNumber:
           type: integer
           format: int64
-          description: Номер гравировки
+          description: Номер гравировки, уникальный идентификатор сущности, формируется системой
         date:
           type: string
           format: date-time
           description: Дата гравировки
         engravingText:
           type: string
-          description: Текст, который нужно выгравировать 
+          description: Текст, который нужно выгравировать, вводится приемщиком
           example: "SGC-01234567890"
         userId:
           type: integer
@@ -531,3 +681,587 @@ components:
       type: object
       description: |- 
         Плоттинг — процесс нанесения на схематическое изображение камня в двух проекциях маркировки дефектов (включения, пятна, трещины и тд).
+      properties:
+        plottingNumber:
+          type: integer
+          format: int64
+          description: номер плоттинга, уникальный идентификатор сущности, формируется системой
+        date:
+          type: string
+          format: date-time
+          description: Дата добавления плоттинга в рабочий лист
+        plottingFile:
+          type: object
+          description: файл с плоттингом, прикладывается пользователем к рабочему листу (изображение)
+    JewelryInserts:
+      type: object
+      description: перечень и описание вставок в ювелирное изделие. вставки задаются произвольно. В изделии может быть 10 бриллиантов, 1 крупный пойдет отдельной вставкой, а 9 мелких - как одна в количестве 9.
+      properties:
+        insertsQuantity:
+          type: integer
+          description: общее количество вставок в ювелирное изделие, вводится диагностом
+        insertProperties:
+          type: array
+          items:
+            $ref: '#/components/schemas/JewelryInsertProperties'
+    JewelryInsertProperties:
+      type: object
+      description: описание и свойства вставки в ювелирное изделие, заполняется частично диагностом в рамках диагностики, частично геммологом в рамках экспертизы
+      properties:
+        insertMineralType:
+          type: string
+          description: Вид минерала вставки, вводится диагностом (перечень будет дополняться)
+          enum:
+            - бриллиант
+            - сапфир
+            - рубин
+        insertQuantity:
+          type: integer
+          description: количество экземпляров вставки, вводится диагностом. 
+          example: 9
+        diamondProperties:
+          $ref: '#/components/schemas/DiamondPropertiesForJewelry'
+    DiamondPropertiesForSingleStone:
+      type: object
+      description: свойства одиночного драгоценного камня, бриллианта, вводятся геммологом в рамках геммологической экспертизы
+      properties:
+        isNaturalDiamond:
+          type: boolean
+          description: признак, что бриллиант имеет натуральное происхождение. false - значит бриллиант имеет лабораторное происхождение
+          example: true
+        isTreatedDiamond:
+          type: boolean
+          description: признак того, что бриллиант подвергся искусственному облагораживанию, false - не подвергался
+          example: false
+        isColoredDiamond:
+          type: boolean
+          description: признак того, что бриллиант цветной, false - нецветной. Порядок заполнения свойства Цвет отличается для цветных и нецветных бриллиантов.
+        diamondCut:
+          type: object
+          description: Огранка бриллианта, содержит маппинг огранки по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondCutId:
+              type: integer
+              format: int32
+              description: идентификатор огранки в справочнике
+            diamondCutNameRF:
+              type: string
+              description: наименование огранки по РФ системе
+              enum:
+                - todo
+            diamondCutNameGIA:
+              type: string
+              description: наименование огранки по GIA системе
+              enum:
+                - todo
+        diamondPolish:
+          type: object
+          description: Полировка бриллианта, содержит маппинг полировки по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondPolishId:
+              type: integer
+              format: int32
+              description: идентификатор полировки в справочнике
+            diamondPolishNameRF:
+              type: string
+              description: наименование полировки по РФ системе
+              enum:
+                - todo
+            diamondPolishNameGIA:
+              type: string
+              description: наименование полировки по GIA системе
+              enum:
+                - todo
+        diamondSymmetry:
+          type: object
+          description: Симметрия бриллианта, содержит маппинг симметрии по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondSymmetryId:
+              type: integer
+              format: int32
+              description: идентификатор симметрии в справочнике
+            diamondSymmetryNameRF:
+              type: string
+              description: наименование симметрии по РФ системе
+              enum:
+                - todo
+            diamondSymmetryNameGIA:
+              type: string
+              description: наименование симметрии по GIA системе
+              enum:
+                - todo
+        diamondFluorescence:
+          type: object
+          description: Флюоресценция бриллианта, содержит маппинг по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondFluorescenceId:
+              type: integer
+              format: int32
+              description: идентификатор флю в справочнике
+            diamondFluorescenceNameRF:
+              type: string
+              description: наименование флю по РФ системе
+              enum:
+                - todo
+            diamondFluorescenceNameGIA:
+              type: string
+              description: наименование флю по GIA системе
+              enum:
+                - todo
+        diamondCulet:
+          type: object
+          description: Калетта бриллианта, содержит маппинг по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondCuletId:
+              type: integer
+              format: int32
+              description: идентификатор калетты в справочнике
+            diamondCuletNameRF:
+              type: string
+              description: наименование калетты по РФ системе
+              enum:
+                - todo
+            diamondCuletNameGIA:
+              type: string
+              description: наименование калетты по GIA системе
+              enum:
+                - todo
+        diamondShape:
+          type: object
+          description: форма бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondShapeRF:
+              type: object
+              description: форма бриллианта по РФ системе
+              properties: 
+                diamondShapeRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор формы по РФ в справочнике
+                diamondShapeRFName: 
+                  type: string
+                  description: наименование формы по РФ системе
+                  enum:
+                    - todo
+            diamondShapeGIA:
+              type: object
+              description: форма бриллианта по GIA системе
+              properties: 
+                diamondShapeGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор формы по GIA в справочнике
+                diamondShapeGIAName: 
+                  type: string
+                  description: наименование формы по GIA системе
+                  enum:
+                    - todo
+        diamondColor:
+          type: object
+          description: цвет бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondColorRF:
+              type: object
+              description: цвет бриллианта по РФ системе
+              properties: 
+                diamondColorRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор цвета по РФ в справочнике
+                diamondColorRFName: 
+                  type: string
+                  description: наименование цвета по РФ системе
+                  enum:
+                    - todo
+            diamondColorGIA:
+              type: object
+              description: цвет бриллианта по GIA системе
+              properties: 
+                diamondColorGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор цвета по GIA в справочнике
+                diamondColorGIAName: 
+                  type: string
+                  description: наименование цвета по GIA системе
+                  enum:
+                    - todo
+                diamondColorGIAForColoredDiamond:
+                  $ref: '#/components/schemas/DiamondColorGIAForColoredDiamonds'
+        diamondClarity:
+          type: object
+          description: чистота бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondClarityRF:
+              type: object
+              description: чистота бриллианта по РФ системе
+              properties: 
+                diamondClarityRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор чистоты по РФ в справочнике
+                diamondClarityRFName: 
+                  type: string
+                  description: наименование чистоты по РФ системе
+                  enum:
+                    - todo
+            diamondClarityGIA:
+              type: object
+              description: чистота бриллианта по GIA системе
+              properties: 
+                diamondClarityGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор чистоты по GIA в справочнике
+                diamondClarityGIAName: 
+                  type: string
+                  description: наименование чистоты по GIA системе
+                  enum:
+                    - todo
+    DiamondPropertiesForMultipleStones:
+      type: object
+      description: свойства партии драгоценных камней, бриллиантов, вводятся геммологом в рамках геммологической экспертизы. Важная особенность - нужна возможность опционального ввода разброса значений. Напримеп - Цвет варьируется в диапазоне от J до K. В сертификат должно пойти сконкатенированное значение "J-K".
+      properties:
+        isNaturalDiamond:
+          type: boolean
+          description: признак, что бриллиант имеет натуральное происхождение. false - значит бриллиант имеет лабораторное происхождение
+          example: true
+        isTreatedDiamond:
+          type: boolean
+          description: признак того, что бриллиант подвергся искусственному облагораживанию, false - не подвергался
+          example: false
+        isColoredDiamond:
+          type: boolean
+          description: признак того, что бриллиант цветной, false - нецветной. Порядок заполнения свойства Цвет отличается для цветных и нецветных бриллиантов.
+        diamondCut:
+          type: object
+          description: Огранка бриллианта, содержит маппинг огранки по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondCutId:
+              type: integer
+              format: int32
+              description: идентификатор огранки в справочнике
+            diamondCutNameRF:
+              type: string
+              description: наименование огранки по РФ системе
+              enum:
+                - todo
+            diamondCutNameGIA:
+              type: string
+              description: наименование огранки по GIA системе
+              enum:
+                - todo
+        diamondShape:
+          type: object
+          description: форма бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondShapeRF:
+              type: object
+              description: форма бриллианта по РФ системе
+              properties: 
+                diamondShapeRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор формы по РФ в справочнике
+                diamondShapeRFName: 
+                  type: string
+                  description: наименование формы по РФ системе
+                  enum:
+                    - todo
+            diamondShapeGIA:
+              type: object
+              description: форма бриллианта по GIA системе
+              properties: 
+                diamondShapeGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор формы по GIA в справочнике
+                diamondShapeGIAName: 
+                  type: string
+                  description: наименование формы по GIA системе
+                  enum:
+                    - todo
+        diamondColor:
+          type: object
+          description: цвет бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondColorRF:
+              type: object
+              description: цвет бриллианта по РФ системе
+              properties: 
+                diamondColorRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор цвета по РФ в справочнике
+                diamondColorRFName: 
+                  type: string
+                  description: наименование цвета по РФ системе
+                  enum:
+                    - todo
+            diamondColorGIA:
+              type: object
+              description: цвет бриллианта по GIA системе
+              properties: 
+                diamondColorGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор цвета по GIA в справочнике
+                diamondColorGIAName: 
+                  type: string
+                  description: наименование цвета по GIA системе
+                  enum:
+                    - todo
+                diamondColorGIAForColoredDiamond:
+                  $ref: '#/components/schemas/DiamondColorGIAForColoredDiamonds'
+        diamondClarity:
+          type: object
+          description: чистота бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondClarityRF:
+              type: object
+              description: чистота бриллианта по РФ системе
+              properties: 
+                diamondClarityRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор чистоты по РФ в справочнике
+                diamondClarityRFName: 
+                  type: string
+                  description: наименование чистоты по РФ системе
+                  enum:
+                    - todo
+            diamondClarityGIA:
+              type: object
+              description: чистота бриллианта по GIA системе
+              properties: 
+                diamondClarityGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор чистоты по GIA в справочнике
+                diamondClarityGIAName: 
+                  type: string
+                  description: наименование чистоты по GIA системе
+                  enum:
+                    - todo
+    DiamondPropertiesForJewelry:
+      type: object
+      description: свойства партии драгоценных камней, бриллиантов, вводятся геммологом в рамках геммологической экспертизы
+      properties:
+        isNaturalDiamond:
+          type: boolean
+          description: признак, что бриллиант имеет натуральное происхождение. false - значит бриллиант имеет лабораторное происхождение
+          example: true
+        isTreatedDiamond:
+          type: boolean
+          description: признак того, что бриллиант подвергся искусственному облагораживанию, false - не подвергался
+          example: false
+        isColoredDiamond:
+          type: boolean
+          description: признак того, что бриллиант цветной, false - нецветной. Порядок заполнения свойства Цвет отличается для цветных и нецветных бриллиантов.
+        diamondCut:
+          type: object
+          description: Огранка бриллианта, содержит маппинг огранки по РФ системе и международной, общий справочник. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondCutId:
+              type: integer
+              format: int32
+              description: идентификатор огранки в справочнике
+            diamondCutNameRF:
+              type: string
+              description: наименование огранки по РФ системе
+              enum:
+                - todo
+            diamondCutNameGIA:
+              type: string
+              description: наименование огранки по GIA системе
+              enum:
+                - todo
+        diamondShape:
+          type: object
+          description: форма бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondShapeRF:
+              type: object
+              description: форма бриллианта по РФ системе
+              properties: 
+                diamondShapeRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор формы по РФ в справочнике
+                diamondShapeRFName: 
+                  type: string
+                  description: наименование формы по РФ системе
+                  enum:
+                    - todo
+            diamondShapeGIA:
+              type: object
+              description: форма бриллианта по GIA системе
+              properties: 
+                diamondShapeGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор формы по GIA в справочнике
+                diamondShapeGIAName: 
+                  type: string
+                  description: наименование формы по GIA системе
+                  enum:
+                    - todo
+        diamondColor:
+          type: object
+          description: цвет бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondColorRF:
+              type: object
+              description: цвет бриллианта по РФ системе
+              properties: 
+                diamondColorRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор цвета по РФ в справочнике
+                diamondColorRFName: 
+                  type: string
+                  description: наименование цвета по РФ системе
+                  enum:
+                    - todo
+            diamondColorGIA:
+              type: object
+              description: цвет бриллианта по GIA системе
+              properties: 
+                diamondColorGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор цвета по GIA в справочнике
+                diamondColorGIAName: 
+                  type: string
+                  description: наименование цвета по GIA системе
+                  enum:
+                    - todo
+                diamondColorGIAForColoredDiamond:
+                  $ref: '#/components/schemas/DiamondColorGIAForColoredDiamonds'
+        diamondClarity:
+          type: object
+          description: чистота бриллианта, РФ и международное значение не маппятся между собой, разные справочники. Для партий должна быть опциональная возможность ввести диапазон значений.
+          properties:
+            diamondClarityRF:
+              type: object
+              description: чистота бриллианта по РФ системе
+              properties: 
+                diamondClarityRFId:
+                  type: integer
+                  format: int32
+                  description: идентификатор чистоты по РФ в справочнике
+                diamondClarityRFName: 
+                  type: string
+                  description: наименование чистоты по РФ системе
+                  enum:
+                    - todo
+            diamondClarityGIA:
+              type: object
+              description: чистота бриллианта по GIA системе
+              properties: 
+                diamondClarityGIAId:
+                  type: integer
+                  format: int32
+                  description: идентификатор чистоты по GIA в справочнике
+                diamondClarityGIAName: 
+                  type: string
+                  description: наименование чистоты по GIA системе
+                  enum:
+                    - todo
+    DiamondColorGIAForColoredDiamonds:
+      type: object
+      description: структура данных, описывающая сложносочиненный цвет цветных бриллиантов по GIA (интенсивность + оттенок1 + оттенок2 + основной цвет). Заполнение структуры должны быть доступно, когда у бриллианта есть признак цветного. Заполняется каждая составляющая отдельно, система должна будет сконкатенировать их в общее значение при печати в сертификационный документ.
+      properties:
+        coloredDiamondIntensity:
+          type: object
+          description: интенесивность цвета цветного бриллианта
+          properties:
+            coloredDiamondIntensityId:
+              type: integer
+              format: int32
+              description: идентификатор интенсивности в справочнике
+            coloredDiamondIntensityName:
+              type: string
+              description: наименование интенсивности
+              enum:
+                - todo
+        coloredDiamondTone1:
+          type: object
+          description: оттенок 1 цвета цветного бриллианта
+          properties:
+            coloredDiamondTone1Id:
+              type: integer
+              format: int32
+              description: идентификатор оттенка 1 в справочнике
+            coloredDiamondTone1Name:
+              type: string
+              description: наименование оттенка 1
+              enum:
+                - todo
+        coloredDiamondTone2:
+          type: object
+          description: оттенок 2 цвета цветного бриллианта
+          properties:
+            coloredDiamondTone2Id:
+              type: integer
+              format: int32
+              description: идентификатор оттенка 2 в справочнике
+            coloredDiamondTone2Name:
+              type: string
+              description: наименование оттенка 2
+              enum:
+                - todo
+        coloredDiamondBaseColor:
+          type: object
+          description: основной цвет цветного бриллианта
+          properties:
+            coloredDiamondBaseColorId:
+              type: integer
+              format: int32
+              description: идентификатор основного цвета в справочнике
+            coloredDiamondBaseColorName:
+              type: string
+              description: наименование основного цвета
+              enum:
+                - todo
+    DefectsList:
+      type: object
+      description: список дефектов, отмечается геммологом выбором из списка
+      properties:
+        externalDefects:
+          type: array
+          description: внешние дефекты
+          items:
+            type: string
+            enum:
+              - "След от удара"
+              - "Полость"
+              - "Скол"
+              - "Трещина"
+              - "Облако"
+              - "Включение"
+              - "Грейнинг внутренний"
+              - "Грейнинг окрашенный"
+              - "Углубленный найф"
+              - "Сучок"
+              - "След обработки лазером"
+              - "Игла"
+              - "Точка"
+              - "Двойниковый шов"
+        internalDefects:
+          type: array
+          description: внутренние дефекты
+          items:
+            type: string
+            enum:
+              - "Абразия"
+              - "Ямка"
+              - "Найф"
+              - "Выкол"
+              - "Линии полировки"
+              - "Пористый рундист"
+              - "Подгар"
+              - "Царапина"
+              - "Скол шипа"
+              - "Микрошов"
+              - "Дополнительная грань"
