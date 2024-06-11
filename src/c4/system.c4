@@ -1,0 +1,111 @@
+specification {
+  element actor
+  element system
+  element component
+  relationship async
+}
+
+model {
+  customer = actor 'Пользователь' {
+    description 'Приемщик / эксперт'
+  }
+
+  certification_system = system 'certification system' {
+    description 'Система сертификации'
+
+    component certification 'Производство' {
+      description 'Учет всех производственных операций связанных с проведением сертификации' 
+      
+      sertification_service = component 'Sertification'
+      sertification_store_service = component 'Sertification Store'
+      web_application_service = component 'Web Application'
+      api_gateway_service = component 'API Gateway'
+      users_service = component 'Users'
+      cert_a_gen_service = component 'cert A gen'
+    }
+
+    component certification_store 'Сертификаты' {
+      description 'Результаты сертификации, логика формирования сертификатов, файлы выпущенных сертификатов'
+    }
+
+    // UI requests data from the Backend
+    certification -> certification_store 'событие завершения работ по сертификации: результаты измерений'
+  }
+
+  wharehouse_system = system 'Складская система' {
+    description '[1C] Не определено'
+  }
+
+  accounting_system = system 'Учетная система' {
+    description '[1C] Не определено'
+  }
+
+  ldap = system 'Каталог пользователей' {
+    description '[Open LDAP] Не определено'
+  }
+
+  dmdk = system 'ГИИС ДМДК' {
+    description 'ГОСУДАРСТВЕННАЯ ИНТЕГРИРОВАННАЯ
+        ИНФОРМАЦИОННАЯ СИСТЕМА В СФЕРЕ
+        КОНТРОЛЯ ЗА ОБОРОТОМ ДРАГОЦЕННЫХ
+        МЕТАЛЛОВ, ДРАГОЦЕННЫХ КАМНЕЙ И ИЗДЕЛИЙ
+        ИЗ НИХ НА ВСЕХ ЭТАПАХ ЭТОГО ОБОРОТА'
+  }
+
+  customer -> certification_system 'opens in browser'
+  certification_system -> wharehouse_system 'текущие остатки'
+  accounting_system -> certification_system 'договора, клиенты и пр.'
+  certification_system -> ldap 'проверка учетных данных'
+  certification_system -> dmdk 'незавершенная работа'
+
+
+  customer -> web_application_service 'opens in browser'
+  web_application_service -> api_gateway_service 'SSL'
+  api_gateway_service -> sertification_service 'sync'
+  api_gateway_service -> sertification_store_service 'sync'
+  sertification_service -[async]-> sertification_store_service 'async'
+  sertification_store_service -> cert_a_gen_service 'sync'
+}
+
+views {
+
+  view index {
+    title 'Landscape view'
+
+    include *
+
+    style customer {
+      shape person
+    }
+
+    style dmdk {
+      color gray
+      shape rectangle
+    }
+  }
+
+  view certification_system of certification_system {
+    include *
+
+    style * {
+      opacity 25%
+    }
+    style customer {
+      color muted
+      shape person
+    }
+  }
+
+  view certification of certification {
+    include *
+
+    style * {
+      opacity 25%
+    }
+
+    style web_application_service {
+      shape browser
+    }
+  }
+
+}
