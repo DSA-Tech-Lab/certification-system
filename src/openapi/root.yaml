@@ -94,15 +94,17 @@ paths:
     get:
       tags:
         - Пакет
-      summary: [Event] Пакет зарегистрирован
+      summary: Event. Пакет зарегистрирован
       description: Пакет зарегистрирован
       operationId: PackageRegisteredEvent
       responses:
         '200':
+          description: successful operation
           content:
             application/json:
               schema:
-                $ref: 'Domain/Package/Events/PackageRegisteredEvent.yaml#PackageRegisteredEvent'
+                $ref: 'https://raw.githubusercontent.com/DSA-Tech-Lab/certification-system/develop/src/openapi/Domain/Package/Events/PackageRegisteredEvent.yaml#/PackageRegisteredEvent'
+                #$ref: 'Domain/Package/Events/PackageRegisteredEvent.yaml#/PackageRegisteredEvent'
 
 components:
   schemas:
