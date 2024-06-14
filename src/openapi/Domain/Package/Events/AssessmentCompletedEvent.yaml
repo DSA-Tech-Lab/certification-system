@@ -1,0 +1,11 @@
+AssessmentCompletedEvent:
+  type: object
+  description: |-
+    Оценка завершена
+    Событие происходит когда все специалисты оценки отметили выполнение работ (диагностика, измерения, геммологическая экспертиза, плоттинг)
+    Для пакета задается статус "Оценка завершена"
+  properties:
+    packageNumber:
+      type: integer
+      format: int64
+      description: Номер пакета

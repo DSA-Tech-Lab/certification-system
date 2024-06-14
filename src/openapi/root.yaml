@@ -89,6 +89,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/worksheetResponse'
 
+
+  /package/events/PackageRegisteredEvent:
+    get:
+      tags:
+        - Пакет
+      summary: [Event] Пакет зарегистрирован
+      description: Пакет зарегистрирован
+      operationId: PackageRegisteredEvent
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: 'Domain/Package/Events/PackageRegisteredEvent.yaml#PackageRegisteredEvent'
+
 components:
   schemas:
     registerRequestCommand:  
