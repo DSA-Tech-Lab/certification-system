@@ -1,0 +1,23 @@
+CertificationPrintedEvent:
+  description: |-
+    Сертификационный документ напечатан
+    Событие происходит когда напечатан сертификационный документ
+    Для пакета задается статус "Сертификационный документ напечатан" и номер сертификата
+  properties:
+    packageNumber:
+      type: integer
+      format: int64
+      description: Номер пакета
+      example:
+        - 123456
+    type:
+      type: string
+      description: Тип документа
+    number:
+      type: integer
+      format: int64
+      description: Номер документа
+    date:
+      type: string
+      format: date
+      description: Дата выдачи документа

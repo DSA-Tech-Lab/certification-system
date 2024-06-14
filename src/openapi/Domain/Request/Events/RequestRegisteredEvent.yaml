@@ -1,0 +1,24 @@
+RequestRegisteredEvent:
+  type: object
+  description: |-
+    Заявка зарегистрирована
+    Для заявки задается статус "Новая Заявка"
+  properties:
+    requestId:
+      type: integer
+      format: int64
+      description: Идентификатор заявки
+    date:
+      type: string
+      format: date-time
+      description: Дата прихода, вводится приемщиком вручную при регистрации
+    clientId:
+      type: integer
+      format: int32
+      description: Идентификатор клиента, клиент выбирается приемщиком при регистрации
+    requestNumber:
+      type: string
+      description: Номер заявки или доп. соглашения, вводится приемщиком вручную (пока что) при регистрации
+
+## В заявке создан хотя бы 1 пакет → Заявка В Работе
+## Все пакеты заявки переведены в статус закрыто → заявка Закрыта

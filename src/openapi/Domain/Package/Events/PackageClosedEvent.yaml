@@ -1,0 +1,11 @@
+PackageClosedEvent:
+  type: object
+  description: |-
+    Пакет закрыт
+    Событие происходит когда приемщик закрыл пакет
+    Для пакета задается статус "Пакет закрыт"
+  properties:
+    packageNumber:
+      type: integer
+      format: int64
+      description: Номер пакета

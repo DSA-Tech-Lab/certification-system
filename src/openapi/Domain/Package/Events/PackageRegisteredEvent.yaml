@@ -1,0 +1,21 @@
+PackageRegisteredEvent:
+  type: object
+  description: |-
+    Пакет зарегистрирован
+    Для пакета задается статус "Пакет в работе"
+  properties:
+    packageNumber:
+      type: integer
+      format: int64
+      description: Номер пакета
+      example:
+        - 123456
+    packageCertificationSystem:
+      type: string
+      description: Тип сертификации для пакета
+    packageWorkScope:
+      type: array
+      description: Перечень работ, которые необходимо будет произвести с пакетом
+    packageType:
+      type: string
+      description: Тип пакета, выбирает приемщик при регистрации пакета
