@@ -127,6 +127,10 @@ components:
               enum: 
                 - "Юридическое лицо"
                 - "Физическое лицо"
+            clientName:
+              type: string
+              description: имя клиента
+              example: ПАО АК АЛРОСА
         requestNumber:
           type: integer
           format: int32
@@ -180,7 +184,7 @@ components:
             - 198772
         state:
           type: string
-          description: Статус заявки. Новый - после регистрации. В работе - после того как хотя бы 1 пакет заявки будет направлен в работу. Закрыт - после того как приемщик закроет заявку. 
+          description: Статус заявки. Новый - после регистрации. В работе - после того как хотя бы 1 пакет заявки будет направлен в работу. Закрыт - после того как все пакеты заявки закрыты. 
           enum:
             - "Новый"
             - "В работе"
@@ -205,8 +209,8 @@ components:
           example:
             - 123456
         packageCertificationSystem:
-          type: string
-          description: Тип сертификации для пакета, выбирается приемщиком при регистрации пакета. Должна быть возможность изменять в процессе, пока пакет не перешел в статус "Закрыт". Тип сертификации не должен влиять на доступные разделы в рабочем листе. Тип сертификации должен влиять на состав данных при печати сертификата.
+          type: array
+          description: Тип сертификации для пакета, выбирается приемщиком при регистрации пакета. Должна быть возможность изменять в процессе, пока пакет не перешел в статус "Закрыт". Тип сертификации не должен влиять на доступные разделы в рабочем листе. Тип сертификации должен влиять на состав данных при печати сертификата. Могут быть выбраны оба типа сертификации
           enum:
               - "Сертификация по РФ системе"
               - "Сертификация по международной системе"
@@ -229,9 +233,8 @@ components:
             - ювелирное изделие
         state:
           type: string
-          description: Статус пакета
+          description: Статус пакета, при создании сразу "В работе", "Закрыт" после закрытия приемщиком
           enum:
-             - Новый
              - В работе
              - Закрыт
         certificate:
@@ -264,8 +267,8 @@ components:
     Worksheet:
       type: object
       description: |- 
-        Рабочий лист — форма, в которую вводятся результаты диагностики (натуральность, форма, цвет, чистота и др.характеристики камня). 
-        Лист создается для каждого пакета в заявке.
+        Рабочий лист — форма, в которую вводятся результаты оценки, гравировки и съемки. 
+        Лист создается для каждого пакета в заявке одновременно с регистрацией пакета.
       properties:
         number:
           type: integer
@@ -289,15 +292,15 @@ components:
           type: boolean
           description: Требуется измерение Хелиум, отмечает диагност
         listOfShooting:
-          type: array
+          type: object
           items:
             $ref: '#/components/schemas/Shooting'
         listOfExaminationResultHelium:
-          type: array
+          type: object
           items:
             $ref: '#/components/schemas/ExaminationResultHelium'
         listOfEngraving:
-          type: array
+          type: object
           items:
             $ref: '#/components/schemas/Engraving'
     PackageWithOneStone:
@@ -518,11 +521,9 @@ components:
         ExaminationResultGemologicalForDifferentPackages:
           type: object
           description: параметрия камня, измеренная вручную. для одиночных камней и партий состав параметров отличается
-          properties:
-            ResultForSingleStone:
-              $ref: '#/components/schemas/HemologicalForSingleStone'
-            ResultForMultipleStones:
-              $ref: '#/components/schemas/DiamondParametersForMultipleStones'
+          oneOf:
+            - $ref: '#/components/schemas/HemologicalForSingleStone'
+            - $ref: '#/components/schemas/DiamondParametersForMultipleStones'
         comment:
           type: string
           description: Произвольный комментарий геммолога, вводится при проведении экспертизы
@@ -540,11 +541,9 @@ components:
     HemologicalForMultipleStones:
       type: object
       description: результаты геммологической экспертизы для партии
-      properties:
-        diamondParameters: 
-          $ref: '#/components/schemas/DiamondParametersForMultipleStones'
-        diamondProperties:
-          $ref: '#/components/schemas/DiamondPropertiesForMultipleStones'
+      oneOf: 
+        - $ref: '#/components/schemas/DiamondParametersForMultipleStones'
+        - $ref: '#/components/schemas/DiamondPropertiesForMultipleStones'
     HemologicalForJewelry:
       type: object
       description: результаты геммологической экспертизы для ювлеирного изделия
@@ -674,9 +673,18 @@ components:
         comment:
           type: string
           description: Произвольный комментарий сотрудника
-        image:
-          type: object
-          description: Фото, результат измерения
+        images:
+          type: array
+          description: Фотоизображения, результаты измерений на Аврора даймондс
+          properties:
+            imageName:
+              type: string
+              description: наименование изображения, нужно чтобы при дальнешем использовании было понятно что за картинка
+              example: "Пакет 12345 LWUV"
+            imageUrl:
+              type: string
+              format: url
+              description: ссылка на хранилище с картинкой
     Engraving:
       type: object
       description: |- 
