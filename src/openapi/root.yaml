@@ -167,7 +167,7 @@ components:
             - 198772
         state:
           type: string
-          description: Статус заявки. Новый - после регистрации. В работе - после того как хотя бы 1 пакет заявки будет направлен в работу. Закрыт - после того как приемщик закроет заявку. 
+          description: Статус заявки. Новый - после регистрации. В работе - после того как хотя бы 1 пакет заявки будет направлен в работу. Закрыт - после того как все пакеты заявки закрыты. 
           enum:
             - "Новый"
             - "В работе"
@@ -250,8 +250,8 @@ components:
     Worksheet:
       type: object
       description: |- 
-        Рабочий лист — форма, в которую вводятся результаты диагностики (натуральность, форма, цвет, чистота и др.характеристики камня). 
-        Лист создается для каждого пакета в заявке.
+        Рабочий лист — форма, в которую вводятся результаты оценки, гравировки и съемки. 
+        Лист создается для каждого пакета в заявке одновременно с регистрацией пакета.
       properties:
         number:
           type: integer
@@ -275,15 +275,15 @@ components:
           type: boolean
           description: Требуется измерение Хелиум, отмечает диагност
         listOfShooting:
-          type: array
+          type: object
           items:
             $ref: '#/components/schemas/Shooting'
         listOfExaminationResultHelium:
-          type: array
+          type: object
           items:
             $ref: '#/components/schemas/ExaminationResultHelium'
         listOfEngraving:
-          type: array
+          type: object
           items:
             $ref: '#/components/schemas/Engraving'
     PackageWithOneStone:
